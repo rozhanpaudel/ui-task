@@ -1,23 +1,27 @@
-import logo from './logo.svg';
-import './App.css';
-
+import { useEffect, useState } from "react";
+import axios from 'axios'
+import Card from "./components/Card";
+import Navbar from "./components/Navbar";
+import BeerList from "./components/BeerList";
+const url = "https://api.punkapi.com/v2/beers"
 function App() {
+  const [beerList, setBeerList] = useState([])
+  useEffect(() => {
+    fetchBeers()
+  }, [])
+
+  async function fetchBeers(){
+    const response = await axios.get(url)
+    const data = response.data
+    console.log(data.length)
+    setBeerList(data)
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container">
+      <Navbar />
+
+      <BeerList beers={beerList} />
     </div>
   );
 }
