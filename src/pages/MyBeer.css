@@ -1,0 +1,11 @@
+.CutomBeerMenu {
+  width: 60vw;
+  height: 60vh;
+  background-color: #eee;
+}
+
+.inside-text {
+  position: relative;
+  top: 30%;
+  left: 0%;
+}
