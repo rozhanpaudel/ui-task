@@ -72,7 +72,6 @@ For running shopSyncupQueueConsumer Consumer (Run it on Azure)
 ```sh
 $ yarn run shopSyncupQueueConsumer
 ```
-```
 </details>
 
 <details>
