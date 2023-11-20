@@ -1,70 +1,100 @@
-# Getting Started with Create React App
+# Product Indexing API (Dukkantek)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+[![Build Status](https://circleci.com/docs/assets/img/docs/shield-passing.png)](https://devops/makethis/beautiful)
 
-## Available Scripts
+Product Indexing API provides all the related APIs to create shop, create products for shop and has api for uploading image to products
+with others features as well.
 
-In the project directory, you can run:
+## Table of contents
 
-### `npm start`
+- Requirements
+- Configuration
+- Installation
+- Services
+- Testing
+- Maintainers
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Requirements
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+This module requires the following :
 
-### `npm test`
+- [Node.js](https://nodejs.org/en) v16
+- [MongoDb](https://www.mongodb.com/)
+- [RabbitMQ](https://www.rabbitmq.com/)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Configuration
+Create a new .env file in the root directory of project,copy all the environment variables from the .env.sample file into .env file and add the values for your project.
 
-### `npm run build`
+**For production environments...**
+Set `NODE_ENV` to production in process environment(.env file)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```sh
+$ NODE_ENV=production
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+**For development environments...**
+Set `NODE_ENV` to local in process environment
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```sh
+$ NODE_ENV=local
+```
 
-### `npm run eject`
+## Installation
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Install the dependencies and devDependencies and start the server.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```sh
+$ yarn install
+$ yarn start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+_Note: product indexing api needs rabbitmq and mongodb configuration inorder to process the client requests_
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Services
 
-## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 1. Product Syncing Queue Consumer
+The ProductSyncupQueue service is designed to operate within Dukkantek's shop. Its primary responsibility is to synchronize all products, images, and shops that have been created on Azure specifically for that shop. This service plays a crucial role in creating precise replicas of the products and images listed on the Azure cluster for the shop, transferring them seamlessly to the local machine where the service is actively running.
 
-### Code Splitting
+For running productSyncupQueue Consumer (Run it on shop)
+```sh
+$ yarn run productSyncupQueueConsumer
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### 2. Shop Syncing Queue Consumer
+The ShopSyncupQueue service operates within the Azure main cluster, focusing on facilitating the comprehensive synchronization of all products and images specifically created for a particular shop. This versatile service is equipped to handle both syncup and deletion job types. When tasked with a synchronization job, the service identifies all products and images associated with the designated shop. It then iterates through each item, submitting them one by one to the ProductSyncupQueue. Subsequently, the ProductSyncupQueue service takes charge of synchronizing each item to the machine designated for the respective shop.
 
-### Analyzing the Bundle Size
+For running shopSyncupQueueConsumer Consumer (Run it on Azure)
+```sh
+$ yarn run shopSyncupQueueConsumer
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
 
-### Making a Progressive Web App
+### 3. Indexing Meta Update Consumer
+The Indexing Meta Update service is deployed within the Dukkantek shop and plays a pivotal role in updating the status of image indexing (imageIndexingStatus) and product indexing (productIndexingStatus) once the indexing process concludes. This service ensures that the status is not only updated in the local machine database of the shop, specifically adjusting the imageProcessedCount for each syncup or indexing job, but it also communicates with the Job Syncup Queue service. This communication involves pushing messages to the Job Syncup Queue, instructing it to update the status on the Azure main cluster, thereby maintaining consistency across both local and distributed systems.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+For running indexingImageMetaUpdate Consumer (Run it on shop)
+```sh
+$ yarn run indexingImageMetaUpdateConsumer
+```
+### 4. Job Meta Sync Service
+Similarly, the JobMetaSyncQueue operates within the Azure main cluster, specifically in the primary Dukkantek environment. Its core responsibility lies in updating crucial job status indicators, including imageProcessedCount, productSyncCount, and imageSyncCount, to ensure synchronization between Dukkantek's local shop and the main Azure shop. This service acts as a bridge for maintaining accurate and up-to-date job-related information, facilitating seamless communication and coordination between the local and central environments.
 
-### Advanced Configuration
+For running jobMetaSync Queue Consumer (Run it on shop)
+```sh
+$ yarn run jobMetaSyncQueueConsumer
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-### Deployment
+# Testing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- `yarn test:unit` to run unit tests
+- `yarn test:integration` to run integration tests
 
-### `npm run build` fails to minify
+You can also:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- `yarn start` to start the Product Indexing api
+- `yarn watch` to start the Product Indexing api in development mode with live reload
+
+
